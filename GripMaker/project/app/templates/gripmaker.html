@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<!-- Template by quackit.com -->
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>Printed Armoury Online Grip Maker</title>
+		<style type="text/css">
+		
+			body{
+				margin:0;
+				padding:0;
+				font-family: Sans-Serif;
+				line-height: 1.5em;
+			}
+			
+			main {
+				padding-bottom: 10010px;
+				margin-bottom: -10000px;
+				float: left;
+				width: 100%;
+			}
+			
+			#nav {
+				float: left;
+				width: 230px;
+				margin-left: -100%;
+				padding-bottom: 10010px;
+				margin-bottom: -10000px;
+				background: #eee;
+			}
+			
+			#wrapper {
+				overflow: hidden;
+			}
+			
+			#content {
+				margin-left: 230px; /* Same as 'nav' width */
+			}
+			
+			.innertube{
+				margin: 15px; /* Padding for content */
+				margin-top: 0;
+			}
+			
+			p {
+				color: #555;
+			}
+	
+			nav ul {
+				list-style-type: none;
+				margin: 0;
+				padding: 0;
+			}
+			
+			nav ul a {
+				color: darkgreen;
+				text-decoration: none;
+			}
+
+            img {
+                max-width: 100%;
+                height: auto;
+                width: auto\9; /* ie8 */
+            }
+		</style>
+	</head>
+	
+	<body>
+		<div id="wrapper">
+			<main>
+				<div id="content">
+					<div class="innertube">
+						<h1>Printed Armoury Online Grip Maker</h1>
+						Welcome to the Printed Armoury Online Grip Maker! Simply enter the required measurements in
+                        <b>millimeters (mm)</b> and select a grip shape to generate a custom 3d printable grip
+                        model! 3d models can be printed at <a href="https://www.shapeways.com/">shapeways</a> or
+                        <a href="https://www.3dhubs.com/">3dhubs</a>. <br>
+                        </p>
+                        <div style="max-width:600px;">
+                            <img src = "/static/measurements.png">
+                        </div>
+                        <div style="max-width:1000px;">
+                            <img src = "/static/gripchoices.png">
+                        </div>
+					</div>
+				</div>
+			</main>
+			
+			<nav id="nav">
+				<div class="innertube">
+					<h3>Measurements (mm)</h3>
+					<form action = "/make_grip" method = post>
+						{{ form.hidden_tag() }}
+						{{ form.w1.label }}<br>
+						{{ form.w1 }} <br>
+						{{ form.w2.label }}<br>
+						{{ form.w2 }} <br>
+						{{ form.w3.label }}<br>
+						{{ form.w3 }} <br>
+						{{ form.g.label }}<br>
+						{{ form.g }} <br>
+						{{ form.t.label }}<br>
+						{{ form.t }} <br>
+						{{ form.choice.label }}<br>
+						{{ form.choice }} <br>
+						{{ form.submit }}
+					</form>
+				</div>
+			</nav>
+			
+		</div>
+	</body>
+</html>
