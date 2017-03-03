@@ -13,11 +13,21 @@ TEMP = 'temp/'
 file_dict = {
     'A': 'ls_hex_grip.stl',
     'B': 'ls_hybrid_grip.stl',
-    'C': 'b_round_grip.stl',
-    'D': 'b_hex_grip.stl',
-    'E': 'sh_round_grip.stl'
+    'C': 'ls_spacer_grip.stl',
+    'D': 'b_round_grip.stl',
+    'E': 'b_hex_grip.stl',
+    'F': 'sh_round_grip.stl'
 }
 
+# Slot tolerance (w1, w3, t)
+slot_dict = {
+    'A': (25, 15, 7.5),
+    'B': (25, 15, 7.5),
+    'C': (25, 14, 7),
+    'D': (25, 15, 7.5),
+    'E': (25, 15, 7.5),
+    'F': (25, 15, 6),
+}
 
 class GripMakerForm(FlaskForm):
     g = DecimalField("g: grip length")
@@ -25,7 +35,7 @@ class GripMakerForm(FlaskForm):
     w2 = DecimalField("w2: width of the slot half way through the grip")
     w3 = DecimalField("w3: width of the slot at the top of the grip")
     t = DecimalField("t: tang thickness")
-    choice = RadioField("Grip choice", choices=[('A', 'A'), ('B', 'B'), ('C', 'C'), ('D', 'D'), ('E', 'E')])
+    choice = RadioField("Grip choice", choices=[('A', 'A'), ('B', 'B'), ('C', 'C'), ('D', 'D'), ('E', 'E'), ('F', 'F')])
     submit = SubmitField("submit")
 
 
@@ -43,27 +53,46 @@ def make_grip():
     t  = float(form.t.data) + 0.2
     g  = float(form.g.data)
 
-    a = (w2/2 - linear_x(w1, w3, 50))/(square_x(w1, w3, 50)-linear_x(w1, w3, 50))
+    a = (w2/2 - linear_x(w1, w3, 50, 100))/(square_x(w1, w3, 50, 100)-linear_x(w1, w3, 50, 100))
     if a < 0:
         a = 0
     b = 1 - a
 
-    if a > 1 or w1 < w2 or w1 < w3 or w2 < w3 or w1 > 25 or w3 > 15 or t > 7.5:
+    tol = slot_dict[form.choice.data]
+    if a > 1 or w1 < w2 or w1 < w3 or w2 < w3:
         return render_template('oops.html')
+
+    # Scale the grip if tang dimensions are too large
+    scalef = (max(w1/tol[0] if w1 > tol[0] else 1, w3/tol[1] if w3 > tol[1] else 1), t/tol[2] if t > tol[2] else 1)
+    scaled = scalef[0] != 1 or scalef[1] != 1
 
     for idx, face in enumerate(grip.data["vectors"]):
         for vector in face:
+            # Scale grip length
+            if form.choice.data == 'C':
+                if vector[2] < 48.5:  # Lower grip
+                    vector[2] *= (g-14)/86
+                elif vector[2] < 61.5:  # Spacer inset
+                    vector[2] += 48 * (g-14)/86 - 48
+                else:
+                    vector[2] = ((g-14)/86)*(vector[2] - 14) + 14
+            else:
+                vector[2] *= g/100
+
             if abs(round(vector[0])) == 1 and abs(round(vector[1])) == 1:
                 z = round(vector[2])
-                x = a*square_x(w1, w3, z) + b*linear_x(w1, w3, z)
+                # Set tang dimensions
+                x = a*square_x(w1, w3, z, g) + b*linear_x(w1, w3, z, g)
                 vector[0] *= x
                 vector[1] *= t/2
-            vector[2] *= g/100
+            else:
+                # Scale grip
+                vector[0] *= scalef[0]
+                vector[1] *= scalef[1]
 
     file_name = str(randint(0, 10000)) + '.stl'
     filepath = TEMP + file_name
     grip.save(filepath)
-
     return send_from_directory(TEMP, file_name, as_attachment=True, attachment_filename=file_dict[form.choice.data])
 
 
@@ -75,12 +104,12 @@ def clear_dir():
         print"Error removing or closing downloaded file handle:", error.strerror
 
 
-def square_x(w1, w3, z):
-    return ((w1-w3)/2)*(10000-z**2)/10000 + w3/2
+def square_x(w1, w3, z, g):
+    return ((w1-w3)/2)*(g**2-z**2)/g**2 + w3/2
 
 
-def linear_x(w1, w3, z):
-    return w1/2 - (w1-w3)*z/200
+def linear_x(w1, w3, z, g):
+    return w1/2 - (w1-w3)*z/(g*2)
 
 
 @app.route('/', methods=['GET', 'POST'])
